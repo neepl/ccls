@@ -10,7 +10,14 @@
 
 namespace ccls {
 struct Pos {
-  uint16_t line = 0;
+#ifdef LINENUM_32BIT
+  using LineNumType = int32_t;
+  static LineNumType const lineNumMax = INT32_MAX;
+#else
+  using LineNumType = uint16_t;
+  static LineNumType const lineNumMax = UINT16_MAX;
+#endif
+  LineNumType line = 0;
   int16_t column = -1;
 
   static Pos fromString(const std::string &encoded);
@@ -68,6 +75,21 @@ void reflect(BinaryWriter &visitor, Range &value);
 
 namespace std {
 template <> struct hash<ccls::Range> {
+  #ifdef LINENUM_32BIT
+  std::size_t operator()(ccls::Range x) const {
+    static_assert(sizeof(ccls::Range) == 16);
+
+    /* Hash tries to combine things that are likely not to collide
+       0000000000000 startcol15...0 startline31..16 startline15...0
+        endline15..0 el23..1631..24     ec7..015..8 000000000000000
+    */
+    int16_t endColSwap = ((x.end.column << 8) & 0xff00) | ((x.end.column >> 8)&0x00ff);
+    int16_t endLineHSwap = ((x.end.line >> 8) & 0xff00) | ((x.end.line >> 24)&0x00ff);
+    uint64_t u64HashLower = (((uint64_t) x.start.column) << 32) | x.start.line;
+    uint64_t u64HashUpper = (((uint64_t)(x.end.line & 0xffff)) << 48) | (((uint64_t)endLineHSwap) << 32) | (((uint64_t)endColSwap) << 16);
+    return hash<uint64_t>()(u64HashLower ^ u64HashUpper);
+  }
+  #else
   std::size_t operator()(ccls::Range x) const {
     union {
       ccls::Range range;
@@ -76,6 +98,7 @@ template <> struct hash<ccls::Range> {
     static_assert(sizeof(ccls::Range) == 8);
     return hash<uint64_t>()(u.u64);
   }
+  #endif // LINENUM_32BIT
 };
 } // namespace std
 

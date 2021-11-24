@@ -152,6 +152,8 @@ endif()
 set_property(SOURCE src/utils.cc APPEND PROPERTY COMPILE_DEFINITIONS
              CLANG_RESOURCE_DIRECTORY=R"\(${CLANG_RESOURCE_DIR}\)")
 
+add_compile_definitions(LINENUM_32BIT)
+
 ### Includes
 
 if(USE_SYSTEM_RAPIDJSON)
