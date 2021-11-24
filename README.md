@@ -27,3 +27,16 @@ Saving files will incrementally update the index.
 * [FAQ](../../wiki/FAQ)
 
 ccls can index itself (~180MiB RSS when idle, noted on 2018-09-01), FreeBSD, glibc, Linux, LLVM (~1800MiB RSS), musl (~60MiB RSS), ... with decent memory footprint. See [wiki/Project-Setup](../../wiki/Project-Setup) for examples.
+
+# LINE 32 BIT
+
+Based on modifications by @rbresalier. See discussion at MaskRay/ccls#366
+
+My build notes:
+```
+cmake -H. -BRelease -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
+    -DCMAKE_PREFIX_PATH=/usr/lib/llvm-12 \
+    -DLLVM_INCLUDE_DIR=/usr/lib/llvm-12/include \
+    -DLLVM_BUILD_INCLUDE_DIR=/usr/include/llvm-12/
+```
